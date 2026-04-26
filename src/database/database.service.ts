@@ -14,19 +14,57 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
   constructor(private configService: ConfigService) {}
 
+  private sanitizeConnectionString(rawUrl?: string): string | undefined {
+    if (!rawUrl) return rawUrl;
+    try {
+      const url = new URL(rawUrl);
+      // Evita conflictos entre parámetros SSL de URL y opciones `ssl` del cliente pg.
+      url.searchParams.delete('sslmode');
+      url.searchParams.delete('sslcert');
+      url.searchParams.delete('sslkey');
+      url.searchParams.delete('sslrootcert');
+      return url.toString();
+    } catch {
+      return rawUrl;
+    }
+  }
+
   /**
    * Inicializa el pool de conexiones cuando el módulo se carga
    */
   async onModuleInit() {
     this.logger.log('Inicializando conexión a PostgreSQL...');
+    const databaseUrl = this.configService.get<string>('DATABASE_URL');
+    const directUrl = this.configService.get<string>('DIRECT_URL');
+    const dbSsl = this.configService.get<string>('DB_SSL', 'true');
+    const dbSslRejectUnauthorized = this.configService.get<string>(
+      'DB_SSL_REJECT_UNAUTHORIZED',
+      'false',
+    );
+    const shouldUseSsl = dbSsl === 'true';
+    const shouldRejectUnauthorized = dbSslRejectUnauthorized === 'true';
+
+    const primaryConnectionString = this.sanitizeConnectionString(
+      directUrl || databaseUrl,
+    );
+    const fallbackConnectionString = this.sanitizeConnectionString(
+      directUrl && databaseUrl ? databaseUrl : undefined,
+    );
 
     // Configurar el pool de conexiones usando las variables de entorno
     this.pool = new Pool({
+      connectionString: primaryConnectionString,
       host: this.configService.get<string>('DB_HOST'),
       port: this.configService.get<number>('DB_PORT'),
       user: this.configService.get<string>('DB_USER'),
       password: this.configService.get<string>('DB_PASSWORD'),
       database: this.configService.get<string>('DB_NAME'),
+      ssl: shouldUseSsl
+        ? {
+            // Supabase usa SSL; en entornos locales puede fallar por CA no confiable.
+            rejectUnauthorized: shouldRejectUnauthorized,
+          }
+        : false,
       max: this.configService.get<number>('DB_MAX_CONNECTIONS', 10),
       idleTimeoutMillis: this.configService.get<number>(
         'DB_IDLE_TIMEOUT',
@@ -34,7 +72,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       ),
       connectionTimeoutMillis: this.configService.get<number>(
         'DB_CONNECTION_TIMEOUT',
-        2000,
+        10000,
       ),
     });
 
@@ -44,12 +82,65 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       this.logger.log('✅ Conexión a PostgreSQL establecida exitosamente');
       client.release();
     } catch (error) {
+      // Intentar URL alterna si existe (ej. pooler vs directa)
+      if (fallbackConnectionString) {
+        this.logger.warn(
+          'Fallo en conexión principal. Reintentando con URL alterna...',
+        );
+        try {
+          await this.pool.end();
+          this.pool = new Pool({
+            connectionString: fallbackConnectionString,
+            host: this.configService.get<string>('DB_HOST'),
+            port: this.configService.get<number>('DB_PORT'),
+            user: this.configService.get<string>('DB_USER'),
+            password: this.configService.get<string>('DB_PASSWORD'),
+            database: this.configService.get<string>('DB_NAME'),
+            ssl: shouldUseSsl
+              ? {
+                  rejectUnauthorized: shouldRejectUnauthorized,
+                }
+              : false,
+            max: this.configService.get<number>('DB_MAX_CONNECTIONS', 10),
+            idleTimeoutMillis: this.configService.get<number>(
+              'DB_IDLE_TIMEOUT',
+              30000,
+            ),
+            connectionTimeoutMillis: this.configService.get<number>(
+              'DB_CONNECTION_TIMEOUT',
+              10000,
+            ),
+          });
+
+          const fallbackClient = await this.pool.connect();
+          this.logger.log(
+            '✅ Conexión a PostgreSQL establecida con URL alterna',
+          );
+          fallbackClient.release();
+          return;
+        } catch {
+          // Sigue al manejo normal de error
+        }
+      }
+
       this.logger.error('❌ Error al conectar a PostgreSQL:');
       this.logger.error(error.message);
+      if (error.message?.toLowerCase().includes('password')) {
+        this.logger.warn(
+          'Para Supabase usa el password de la base de datos (Project Settings > Database), no la publishable key.',
+        );
+      }
+      if (error.message?.toLowerCase().includes('certificate')) {
+        this.logger.warn(
+          'Configura DB_SSL=true y DB_SSL_REJECT_UNAUTHORIZED=false para evitar errores de certificado en desarrollo.',
+        );
+      }
       this.logger.warn(
         '⚠️ La aplicación iniciará sin conexión a la base de datos',
       );
-      this.logger.warn('Verifica las credenciales en el archivo .env');
+      this.logger.warn(
+        'Verifica credenciales/SSL en .env.local (o .env) y reinicia el servidor',
+      );
       // No lanzamos el error para que la app pueda iniciar igual
     }
   }
