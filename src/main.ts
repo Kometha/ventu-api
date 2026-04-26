@@ -40,6 +40,7 @@ async function bootstrap() {
     .setVersion('1.0')
     .addTag('sample', 'Endpoints de ejemplo para operaciones CRUD')
     .addTag('locales', 'CRUD de locales')
+    .addTag('locatarios', 'CRUD de locatarios con imagenes embebidas')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
