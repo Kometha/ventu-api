@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { SampleModule } from './sample/sample.module';
 import { DatabaseModule } from './database/database.module';
+import { LocalesModule } from './locales/locales.module';
 
 /**
  * Módulo raíz de la aplicación
@@ -18,6 +19,7 @@ import { DatabaseModule } from './database/database.module';
     DatabaseModule, // Módulo de conexión a PostgreSQL (Global)
     SampleModule, // Módulo de ejemplo con operaciones CRUD
     BitacoraModule, // Módulo de bitácora
+    LocalesModule, // Módulo CRUD de locales
   ],
   controllers: [AppController],
   providers: [AppService],
