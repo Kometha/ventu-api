@@ -41,6 +41,9 @@ async function bootstrap() {
     .addTag('sample', 'Endpoints de ejemplo para operaciones CRUD')
     .addTag('locales', 'CRUD de locales')
     .addTag('locatarios', 'CRUD de locatarios con imagenes embebidas')
+    .addTag('uploads', 'Subida de imágenes a Supabase Storage')
+    .addTag('categorias', 'CRUD de categorias')
+    .addTag('plantas', 'CRUD de plantas')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
