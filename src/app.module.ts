@@ -13,7 +13,7 @@ import { DatabaseModule } from './database/database.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true, // Hace que ConfigService esté disponible en toda la app
-      envFilePath: '.env', // Ruta al archivo .env
+      envFilePath: ['.env.local', '.env'], // Prioriza .env.local y usa .env como fallback
     }),
     DatabaseModule, // Módulo de conexión a PostgreSQL (Global)
     SampleModule, // Módulo de ejemplo con operaciones CRUD
