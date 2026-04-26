@@ -7,6 +7,9 @@ import { SampleModule } from './sample/sample.module';
 import { DatabaseModule } from './database/database.module';
 import { LocalesModule } from './locales/locales.module';
 import { LocatariosModule } from './locatarios/locatarios.module';
+import { UploadsModule } from './uploads/uploads.module';
+import { CategoriasModule } from './categorias/categorias.module';
+import { PlantasModule } from './plantas/plantas.module';
 
 /**
  * Módulo raíz de la aplicación
@@ -22,6 +25,9 @@ import { LocatariosModule } from './locatarios/locatarios.module';
     BitacoraModule, // Módulo de bitácora
     LocalesModule, // Módulo CRUD de locales
     LocatariosModule, // Módulo CRUD de locatarios
+    UploadsModule, // Módulo para subida de imágenes a Supabase Storage
+    CategoriasModule, // Módulo CRUD de categorías
+    PlantasModule, // Módulo CRUD de plantas
   ],
   controllers: [AppController],
   providers: [AppService],
