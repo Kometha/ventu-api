@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { SampleModule } from './sample/sample.module';
 import { DatabaseModule } from './database/database.module';
 import { LocalesModule } from './locales/locales.module';
+import { LocatariosModule } from './locatarios/locatarios.module';
 
 /**
  * Módulo raíz de la aplicación
@@ -20,6 +21,7 @@ import { LocalesModule } from './locales/locales.module';
     SampleModule, // Módulo de ejemplo con operaciones CRUD
     BitacoraModule, // Módulo de bitácora
     LocalesModule, // Módulo CRUD de locales
+    LocatariosModule, // Módulo CRUD de locatarios
   ],
   controllers: [AppController],
   providers: [AppService],
