@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  HttpException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -29,6 +30,23 @@ type ImagenRow = {
   orden: number;
   es_portada: boolean;
   created_at: Date;
+};
+
+type LocalLookupRow = {
+  id: string;
+  categoria_id: string;
+  planta_id: string;
+  area_m2: string | number;
+};
+
+type ContratoRow = {
+  id: string;
+  local_id: string;
+  estado_contrato_id: string;
+  fecha_inicio: string | Date;
+  fecha_fin: string | Date;
+  renta_base: string | number;
+  moneda: string;
 };
 
 @Injectable()
@@ -84,9 +102,13 @@ export class LocatariosService {
         throw new ConflictException('El RTN ya existe para otro locatario.');
       case '22P02':
         throw new BadRequestException('El ID no tiene formato UUID valido.');
+      case '23503':
+        throw new BadRequestException(
+          'El estado de contrato o local indicado no existe.',
+        );
       default:
         throw new InternalServerErrorException(
-          'Ocurrio un error al procesar la operacion de locatarios.',
+          `Ocurrio un error al procesar la operacion de locatarios. ${error?.message ?? ''}`.trim(),
         );
     }
   }
@@ -112,6 +134,64 @@ export class LocatariosService {
 
       const locatario = result.rows[0];
 
+      const localResult = await client.query<LocalLookupRow>(
+        `SELECT id, categoria_id, planta_id, area_m2
+         FROM locales
+         WHERE id = $1`,
+        [createLocatarioDto.localId],
+      );
+
+      if (!localResult.rows.length) {
+        throw new BadRequestException('No existe un local con el localId enviado.');
+      }
+
+      const local = localResult.rows[0];
+      if (
+        createLocatarioDto.categoriaId &&
+        local.categoria_id !== createLocatarioDto.categoriaId
+      ) {
+        throw new BadRequestException(
+          'La categoria seleccionada no coincide con el local seleccionado.',
+        );
+      }
+      if (createLocatarioDto.plantaId && local.planta_id !== createLocatarioDto.plantaId) {
+        throw new BadRequestException(
+          'La planta seleccionada no coincide con el local seleccionado.',
+        );
+      }
+
+      if (createLocatarioDto.areaM2 !== undefined) {
+        const localArea = Number(local.area_m2);
+        const payloadArea = Number(createLocatarioDto.areaM2);
+        if (Math.abs(localArea - payloadArea) > 0.01) {
+          throw new BadRequestException(
+            'El area_m2 no coincide con el area configurada en el local.',
+          );
+        }
+      }
+
+      if (
+        createLocatarioDto.codigoLocal &&
+        createLocatarioDto.codigoLocal.trim().length > 0
+      ) {
+        const codigoResult = await client.query<{ codigo_local: string }>(
+          `SELECT codigo_local FROM locales WHERE id = $1`,
+          [local.id],
+        );
+        const codigoLocalDb = codigoResult.rows[0]?.codigo_local;
+        if (codigoLocalDb !== createLocatarioDto.codigoLocal) {
+          throw new BadRequestException(
+            'El codigoLocal no coincide con el local seleccionado.',
+          );
+        }
+      }
+
+      if (new Date(createLocatarioDto.finContrato) < new Date(createLocatarioDto.inicioContrato)) {
+        throw new BadRequestException(
+          'finContrato no puede ser menor a inicioContrato.',
+        );
+      }
+
       if (createLocatarioDto.imagenes?.length) {
         for (const imagen of createLocatarioDto.imagenes) {
           await client.query(
@@ -122,10 +202,39 @@ export class LocatariosService {
         }
       }
 
+      const contratoResult = await client.query<ContratoRow>(
+        `INSERT INTO contratos (local_id, locatario_id, estado_contrato_id, fecha_inicio, fecha_fin, renta_base, moneda)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         RETURNING id, local_id, estado_contrato_id, fecha_inicio, fecha_fin, renta_base, moneda`,
+        [
+          local.id,
+          locatario.id,
+          createLocatarioDto.estadoContratoId,
+          createLocatarioDto.inicioContrato,
+          createLocatarioDto.finContrato,
+          createLocatarioDto.rentaMensual,
+          createLocatarioDto.moneda ?? 'L',
+        ],
+      );
+
       await client.query('COMMIT');
-      return this.mapLocatarioWithImages(locatario);
+      const mapped = await this.mapLocatarioWithImages(locatario);
+      const contrato = contratoResult.rows[0];
+      mapped.contratoActual = {
+        id: contrato.id,
+        localId: contrato.local_id,
+        estadoContratoId: contrato.estado_contrato_id,
+        fechaInicio: new Date(contrato.fecha_inicio).toISOString().slice(0, 10),
+        fechaFin: new Date(contrato.fecha_fin).toISOString().slice(0, 10),
+        rentaBase: Number(contrato.renta_base),
+        moneda: contrato.moneda,
+      };
+      return mapped;
     } catch (error) {
       await client.query('ROLLBACK');
+      if (error instanceof HttpException) {
+        throw error;
+      }
       this.handleDbError(error);
     } finally {
       client.release();
