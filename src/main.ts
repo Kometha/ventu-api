@@ -44,6 +44,7 @@ async function bootstrap() {
     .addTag('uploads', 'Subida de imágenes a Supabase Storage')
     .addTag('categorias', 'CRUD de categorias')
     .addTag('plantas', 'CRUD de plantas')
+    .addTag('estados-contrato', 'CRUD de estados de contrato')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
