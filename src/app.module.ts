@@ -11,6 +11,7 @@ import { UploadsModule } from './uploads/uploads.module';
 import { CategoriasModule } from './categorias/categorias.module';
 import { PlantasModule } from './plantas/plantas.module';
 import { EstadosContratoModule } from './estados-contrato/estados-contrato.module';
+import { ContratosModule } from './contratos/contratos.module';
 
 /**
  * Módulo raíz de la aplicación
@@ -30,6 +31,7 @@ import { EstadosContratoModule } from './estados-contrato/estados-contrato.modul
     CategoriasModule, // Módulo CRUD de categorías
     PlantasModule, // Módulo CRUD de plantas
     EstadosContratoModule, // Módulo CRUD de estados de contrato
+    ContratosModule, // Módulo CRUD de contratos de arrendamiento
   ],
   controllers: [AppController],
   providers: [AppService],
