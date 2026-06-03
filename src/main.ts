@@ -45,6 +45,10 @@ async function bootstrap() {
     .addTag('categorias', 'CRUD de categorias')
     .addTag('plantas', 'CRUD de plantas')
     .addTag('estados-contrato', 'CRUD de estados de contrato')
+    .addTag(
+      'contratos',
+      'CRUD de contratos de arrendamiento con relaciones embebidas',
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
