@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe, Logger } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
@@ -38,6 +38,11 @@ async function bootstrap() {
       'Template de API REST con NestJS que incluye logger, validaciones y ejemplos CRUD',
     )
     .setVersion('1.0')
+    .addBearerAuth()
+    .addTag('auth', 'Autenticacion JWT')
+    .addTag('usuarios', 'Gestion de usuarios')
+    .addTag('tickets', 'Tickets de mantenimiento y Kanban')
+    .addTag('notificaciones', 'Notificaciones persistentes')
     .addTag('sample', 'Endpoints de ejemplo para operaciones CRUD')
     .addTag('locales', 'CRUD de locales')
     .addTag('locatarios', 'CRUD de locatarios con imagenes embebidas')
