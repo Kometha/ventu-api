@@ -1,6 +1,12 @@
 import { BitacoraModule } from './bitacora/bitacora.module';
 import { Module } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import { AuthModule } from './auth/auth.module';
+import { UsuariosModule } from './usuarios/usuarios.module';
+import { TicketsModule } from './tickets/tickets.module';
+import { NotificacionesModule } from './notificaciones/notificaciones.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { SampleModule } from './sample/sample.module';
@@ -32,8 +38,18 @@ import { ContratosModule } from './contratos/contratos.module';
     PlantasModule, // Módulo CRUD de plantas
     EstadosContratoModule, // Módulo CRUD de estados de contrato
     ContratosModule, // Módulo CRUD de contratos de arrendamiento
+    AuthModule,
+    UsuariosModule,
+    TicketsModule,
+    NotificacionesModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TransformInterceptor,
+    },
+  ],
 })
 export class AppModule {}
