@@ -63,6 +63,12 @@ export class Locatario {
   razonSocial?: string | null;
 
   @ApiProperty({
+    description: 'ID de la categoria asociada',
+    example: '4be31bc2-d5f3-4b17-bc57-a6200e7ea9f4',
+  })
+  categoriaId: string;
+
+  @ApiProperty({
     description: 'RTN',
     example: '08011999123960',
     nullable: true,
@@ -101,29 +107,6 @@ export class Locatario {
     type: [ImagenLocatario],
   })
   imagenes: ImagenLocatario[];
-
-  @ApiProperty({
-    description: 'Informacion del contrato creado para el locatario',
-    nullable: true,
-    example: {
-      id: '9c91ff21-c001-4e92-a073-bf2080142752',
-      localId: 'f1494139-f5ff-4b69-a237-34a0be53af44',
-      estadoContratoId: '0f05954b-cd42-48b5-af62-5bcc7d359d29',
-      fechaInicio: '2026-05-01',
-      fechaFin: '2027-04-30',
-      rentaBase: 25000,
-      moneda: 'L',
-    },
-  })
-  contratoActual?: {
-    id: string;
-    localId: string;
-    estadoContratoId: string;
-    fechaInicio: string;
-    fechaFin: string;
-    rentaBase: number;
-    moneda: string;
-  };
 
   constructor(partial: Partial<Locatario>) {
     Object.assign(this, partial);
