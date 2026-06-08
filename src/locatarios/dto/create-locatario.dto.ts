@@ -1,19 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsArray,
-  IsDateString,
-  IsEmail,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsPositive,
-  IsString,
-  IsUUID,
-  MaxLength,
-  ValidateNested,
-} from 'class-validator';
-import { Type } from 'class-transformer';
-import { ImagenLocatarioDto } from './imagen-locatario.dto';
+import { IsEmail, IsNotEmpty, IsString, IsUUID, MaxLength } from 'class-validator';
 
 export class CreateLocatarioDto {
   @ApiProperty({
@@ -35,6 +21,13 @@ export class CreateLocatarioDto {
   @IsString({ message: 'razonSocial debe ser una cadena de texto' })
   @MaxLength(180, { message: 'razonSocial no puede exceder 180 caracteres' })
   razonSocial: string;
+
+  @ApiProperty({
+    description: 'Categoria del locatario',
+    example: '4be31bc2-d5f3-4b17-bc57-a6200e7ea9f4',
+  })
+  @IsUUID('4', { message: 'categoriaId debe ser un UUID valido' })
+  categoriaId: string;
 
   @ApiProperty({
     description: 'RTN unico',
@@ -67,108 +60,11 @@ export class CreateLocatarioDto {
   email: string;
 
   @ApiProperty({
-    description: 'ID del local seleccionado (dropdown de locales)',
-    example: 'f1494139-f5ff-4b69-a237-34a0be53af44',
-  })
-  @IsUUID('4', { message: 'localId debe ser un UUID valido' })
-  localId: string;
-
-  @ApiProperty({
-    description: 'Categoria asociada al local (opcional, solo para validacion)',
-    example: '4be31bc2-d5f3-4b17-bc57-a6200e7ea9f4',
-    required: false,
-  })
-  @IsOptional()
-  @IsUUID('4', { message: 'categoriaId debe ser un UUID valido' })
-  categoriaId?: string;
-
-  @ApiProperty({
-    description: 'Estado del contrato',
-    example: '0f05954b-cd42-48b5-af62-5bcc7d359d29',
-  })
-  @IsUUID('4', { message: 'estadoContratoId debe ser un UUID valido' })
-  estadoContratoId: string;
-
-  @ApiProperty({
-    description: 'Codigo de local (opcional, solo para validacion cruzada)',
-    example: 'LOC-A12',
-    maxLength: 20,
-    required: false,
-  })
-  @IsOptional()
-  @IsString({ message: 'codigoLocal debe ser una cadena de texto' })
-  @MaxLength(20, { message: 'codigoLocal no puede exceder 20 caracteres' })
-  codigoLocal?: string;
-
-  @ApiProperty({
-    description: 'Planta asociada al local (opcional, solo para validacion)',
-    example: 'b98c4efd-df45-4b2f-a1d6-49a6ea0f8831',
-    required: false,
-  })
-  @IsOptional()
-  @IsUUID('4', { message: 'plantaId debe ser un UUID valido' })
-  plantaId?: string;
-
-  @ApiProperty({
-    description: 'Area del local en metros cuadrados (opcional, solo para validacion)',
-    example: 45.5,
-    required: false,
-  })
-  @IsOptional()
-  @IsNumber({}, { message: 'areaM2 debe ser numerico' })
-  @IsPositive({ message: 'areaM2 debe ser mayor a 0' })
-  areaM2?: number;
-
-  @ApiProperty({
-    description: 'Renta mensual base',
-    example: 25000,
-  })
-  @IsNumber({}, { message: 'rentaMensual debe ser numerico' })
-  @IsPositive({ message: 'rentaMensual debe ser mayor a 0' })
-  rentaMensual: number;
-
-  @ApiProperty({
-    description: 'Fecha de inicio de contrato',
-    example: '2026-05-01',
-  })
-  @IsDateString({}, { message: 'inicioContrato debe ser una fecha valida' })
-  inicioContrato: string;
-
-  @ApiProperty({
-    description: 'Fecha de fin de contrato',
-    example: '2027-04-30',
-  })
-  @IsDateString({}, { message: 'finContrato debe ser una fecha valida' })
-  finContrato: string;
-
-  @ApiProperty({
-    description: 'Moneda del contrato (1 caracter)',
-    example: 'L',
-    required: false,
-    maxLength: 1,
-  })
-  @IsOptional()
-  @IsString({ message: 'moneda debe ser una cadena de texto' })
-  @MaxLength(1, { message: 'moneda debe tener maximo 1 caracter' })
-  moneda?: string;
-
-  @ApiProperty({
     description: 'URL del logo principal',
     example: 'https://cdn.miapp.com/locatarios/logo-principal.png',
-    required: false,
   })
-  @IsOptional()
+  @IsNotEmpty({ message: 'logoUrl es requerido' })
   @IsString({ message: 'logoUrl debe ser una cadena de texto' })
-  logoUrl?: string;
-
-  @ApiProperty({
-    description: 'Imagenes asociadas al locatario',
-    type: [ImagenLocatarioDto],
-    required: false,
-  })
-  @IsOptional()
-  @IsArray({ message: 'imagenes debe ser un arreglo' })
-  @ValidateNested({ each: true })
-  @Type(() => ImagenLocatarioDto)
-  imagenes?: ImagenLocatarioDto[];
+  @MaxLength(250, { message: 'logoUrl no puede exceder 250 caracteres' })
+  logoUrl: string;
 }
