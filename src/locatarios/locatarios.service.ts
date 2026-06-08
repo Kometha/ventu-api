@@ -16,6 +16,7 @@ type LocatarioRow = {
   id: string;
   nombre_comercial: string;
   razon_social: string | null;
+  categoria_id: string;
   rtn: string | null;
   telefono: string | null;
   email: string | null;
@@ -32,22 +33,6 @@ type ImagenRow = {
   created_at: Date;
 };
 
-type LocalLookupRow = {
-  id: string;
-  categoria_id: string;
-  planta_id: string;
-  area_m2: string | number;
-};
-
-type ContratoRow = {
-  id: string;
-  local_id: string;
-  estado_contrato_id: string;
-  fecha_inicio: string | Date;
-  fecha_fin: string | Date;
-  renta_base: string | number;
-  moneda: string;
-};
 
 @Injectable()
 export class LocatariosService {
@@ -83,10 +68,12 @@ export class LocatariosService {
     client?: PoolClient,
   ): Promise<Locatario> {
     const imagenes = await this.getImagenesByLocatarioId(row.id, client);
+
     return new Locatario({
       id: row.id,
       nombreComercial: row.nombre_comercial,
       razonSocial: row.razon_social,
+      categoriaId: row.categoria_id,
       rtn: row.rtn,
       telefono: row.telefono,
       email: row.email,
@@ -104,7 +91,7 @@ export class LocatariosService {
         throw new BadRequestException('El ID no tiene formato UUID valido.');
       case '23503':
         throw new BadRequestException(
-          'El estado de contrato o local indicado no existe.',
+          'La categoria indicada no existe o no es valida.',
         );
       default:
         throw new InternalServerErrorException(
@@ -119,117 +106,23 @@ export class LocatariosService {
       await client.query('BEGIN');
 
       const result = await client.query<LocatarioRow>(
-        `INSERT INTO locatarios (nombre_comercial, razon_social, rtn, telefono, email, logo_url)
-         VALUES ($1, $2, $3, $4, $5, $6)
-         RETURNING id, nombre_comercial, razon_social, rtn, telefono, email, logo_url, created_at`,
+        `INSERT INTO locatarios (nombre_comercial, razon_social, categoria_id, rtn, telefono, email, logo_url)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         RETURNING id, nombre_comercial, razon_social, categoria_id, rtn, telefono, email, logo_url, created_at`,
         [
           createLocatarioDto.nombreComercial,
-          createLocatarioDto.razonSocial ?? null,
-          createLocatarioDto.rtn ?? null,
-          createLocatarioDto.telefono ?? null,
-          createLocatarioDto.email ?? null,
-          createLocatarioDto.logoUrl ?? null,
+          createLocatarioDto.razonSocial,
+          createLocatarioDto.categoriaId,
+          createLocatarioDto.rtn,
+          createLocatarioDto.telefono,
+          createLocatarioDto.email,
+          createLocatarioDto.logoUrl,
         ],
       );
 
-      const locatario = result.rows[0];
-
-      const localResult = await client.query<LocalLookupRow>(
-        `SELECT id, categoria_id, planta_id, area_m2
-         FROM locales
-         WHERE id = $1`,
-        [createLocatarioDto.localId],
-      );
-
-      if (!localResult.rows.length) {
-        throw new BadRequestException('No existe un local con el localId enviado.');
-      }
-
-      const local = localResult.rows[0];
-      if (
-        createLocatarioDto.categoriaId &&
-        local.categoria_id !== createLocatarioDto.categoriaId
-      ) {
-        throw new BadRequestException(
-          'La categoria seleccionada no coincide con el local seleccionado.',
-        );
-      }
-      if (createLocatarioDto.plantaId && local.planta_id !== createLocatarioDto.plantaId) {
-        throw new BadRequestException(
-          'La planta seleccionada no coincide con el local seleccionado.',
-        );
-      }
-
-      if (createLocatarioDto.areaM2 !== undefined) {
-        const localArea = Number(local.area_m2);
-        const payloadArea = Number(createLocatarioDto.areaM2);
-        if (Math.abs(localArea - payloadArea) > 0.01) {
-          throw new BadRequestException(
-            'El area_m2 no coincide con el area configurada en el local.',
-          );
-        }
-      }
-
-      if (
-        createLocatarioDto.codigoLocal &&
-        createLocatarioDto.codigoLocal.trim().length > 0
-      ) {
-        const codigoResult = await client.query<{ codigo_local: string }>(
-          `SELECT codigo_local FROM locales WHERE id = $1`,
-          [local.id],
-        );
-        const codigoLocalDb = codigoResult.rows[0]?.codigo_local;
-        if (codigoLocalDb !== createLocatarioDto.codigoLocal) {
-          throw new BadRequestException(
-            'El codigoLocal no coincide con el local seleccionado.',
-          );
-        }
-      }
-
-      if (new Date(createLocatarioDto.finContrato) < new Date(createLocatarioDto.inicioContrato)) {
-        throw new BadRequestException(
-          'finContrato no puede ser menor a inicioContrato.',
-        );
-      }
-
-      if (createLocatarioDto.imagenes?.length) {
-        for (const imagen of createLocatarioDto.imagenes) {
-          await client.query(
-            `INSERT INTO imagenes_locatarios (locatario_id, url, orden, es_portada)
-             VALUES ($1, $2, $3, $4)`,
-            [locatario.id, imagen.url, imagen.orden ?? 0, imagen.esPortada ?? false],
-          );
-        }
-      }
-
-      const contratoResult = await client.query<ContratoRow>(
-        `INSERT INTO contratos (local_id, locatario_id, estado_contrato_id, fecha_inicio, fecha_fin, renta_base, moneda)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
-         RETURNING id, local_id, estado_contrato_id, fecha_inicio, fecha_fin, renta_base, moneda`,
-        [
-          local.id,
-          locatario.id,
-          createLocatarioDto.estadoContratoId,
-          createLocatarioDto.inicioContrato,
-          createLocatarioDto.finContrato,
-          createLocatarioDto.rentaMensual,
-          createLocatarioDto.moneda ?? 'L',
-        ],
-      );
 
       await client.query('COMMIT');
-      const mapped = await this.mapLocatarioWithImages(locatario);
-      const contrato = contratoResult.rows[0];
-      mapped.contratoActual = {
-        id: contrato.id,
-        localId: contrato.local_id,
-        estadoContratoId: contrato.estado_contrato_id,
-        fechaInicio: new Date(contrato.fecha_inicio).toISOString().slice(0, 10),
-        fechaFin: new Date(contrato.fecha_fin).toISOString().slice(0, 10),
-        rentaBase: Number(contrato.renta_base),
-        moneda: contrato.moneda,
-      };
-      return mapped;
+      return this.mapLocatarioWithImages(result.rows[0]);
     } catch (error) {
       await client.query('ROLLBACK');
       if (error instanceof HttpException) {
@@ -244,7 +137,7 @@ export class LocatariosService {
   async findAll(): Promise<Locatario[]> {
     try {
       const result = await this.databaseService.query<LocatarioRow>(
-        `SELECT id, nombre_comercial, razon_social, rtn, telefono, email, logo_url, created_at
+        `SELECT id, nombre_comercial, razon_social, categoria_id, rtn, telefono, email, logo_url, created_at
          FROM locatarios
          ORDER BY created_at DESC`,
       );
@@ -258,7 +151,7 @@ export class LocatariosService {
   async findOne(id: string): Promise<Locatario> {
     try {
       const result = await this.databaseService.query<LocatarioRow>(
-        `SELECT id, nombre_comercial, razon_social, rtn, telefono, email, logo_url, created_at
+        `SELECT id, nombre_comercial, razon_social, categoria_id, rtn, telefono, email, logo_url, created_at
          FROM locatarios
          WHERE id = $1`,
         [id],
@@ -291,6 +184,10 @@ export class LocatariosService {
         fields.push(`razon_social = $${fields.length + 1}`);
         values.push(updateLocatarioDto.razonSocial);
       }
+      if (updateLocatarioDto.categoriaId !== undefined) {
+        fields.push(`categoria_id = $${fields.length + 1}`);
+        values.push(updateLocatarioDto.categoriaId);
+      }
       if (updateLocatarioDto.rtn !== undefined) {
         fields.push(`rtn = $${fields.length + 1}`);
         values.push(updateLocatarioDto.rtn);
@@ -315,13 +212,13 @@ export class LocatariosService {
           `UPDATE locatarios
            SET ${fields.join(', ')}
            WHERE id = $${values.length}
-           RETURNING id, nombre_comercial, razon_social, rtn, telefono, email, logo_url, created_at`,
+           RETURNING id, nombre_comercial, razon_social, categoria_id, rtn, telefono, email, logo_url, created_at`,
           values,
         );
         locatarioRow = updateResult.rows[0];
       } else {
         const existing = await client.query<LocatarioRow>(
-          `SELECT id, nombre_comercial, razon_social, rtn, telefono, email, logo_url, created_at
+          `SELECT id, nombre_comercial, razon_social, categoria_id, rtn, telefono, email, logo_url, created_at
            FROM locatarios
            WHERE id = $1`,
           [id],
@@ -331,17 +228,6 @@ export class LocatariosService {
 
       if (!locatarioRow) {
         throw new NotFoundException(`No existe un locatario con id ${id}`);
-      }
-
-      if (updateLocatarioDto.imagenes !== undefined) {
-        await client.query(`DELETE FROM imagenes_locatarios WHERE locatario_id = $1`, [id]);
-        for (const imagen of updateLocatarioDto.imagenes) {
-          await client.query(
-            `INSERT INTO imagenes_locatarios (locatario_id, url, orden, es_portada)
-             VALUES ($1, $2, $3, $4)`,
-            [id, imagen.url, imagen.orden ?? 0, imagen.esPortada ?? false],
-          );
-        }
       }
 
       await client.query('COMMIT');
