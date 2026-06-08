@@ -65,6 +65,5 @@ export class CreateLocatarioDto {
   })
   @IsNotEmpty({ message: 'logoUrl es requerido' })
   @IsString({ message: 'logoUrl debe ser una cadena de texto' })
-  @MaxLength(250, { message: 'logoUrl no puede exceder 250 caracteres' })
   logoUrl: string;
 }
