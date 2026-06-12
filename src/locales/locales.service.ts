@@ -34,7 +34,6 @@ export class LocalesService {
       id: row.id,
       nombre: row.nombre,
       codigoLocal: row.codigo_local,
-      categoriaId: row.categoria_id,
       plantaId: row.planta_id,
       areaM2: Number(row.area_m2),
       descripcion: row.descripcion,
@@ -66,13 +65,12 @@ export class LocalesService {
   async create(createLocalDto: CreateLocalDto): Promise<Local> {
     try {
       const result = await this.databaseService.query<LocalRow>(
-        `INSERT INTO locales (nombre, codigo_local, categoria_id, planta_id, area_m2, descripcion)
-         VALUES ($1, $2, $3, $4, $5, $6)
-         RETURNING id, nombre, codigo_local, categoria_id, planta_id, area_m2, descripcion, created_at, updated_at`,
+        `INSERT INTO locales (nombre, codigo_local, planta_id, area_m2, descripcion)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING id, nombre, codigo_local, planta_id, area_m2, descripcion, created_at, updated_at`,
         [
           createLocalDto.nombre,
           createLocalDto.codigoLocal,
-          createLocalDto.categoriaId,
           createLocalDto.plantaId,
           createLocalDto.areaM2,
           createLocalDto.descripcion ?? null,
@@ -88,7 +86,7 @@ export class LocalesService {
   async findAll(): Promise<Local[]> {
     try {
       const result = await this.databaseService.query<LocalRow>(
-        `SELECT id, nombre, codigo_local, categoria_id, planta_id, area_m2, descripcion, created_at, updated_at
+        `SELECT id, nombre, codigo_local, planta_id, area_m2, descripcion, created_at, updated_at
          FROM locales
          ORDER BY created_at DESC`,
       );
@@ -102,7 +100,7 @@ export class LocalesService {
   async findOne(id: string): Promise<Local> {
     try {
       const result = await this.databaseService.query<LocalRow>(
-        `SELECT id, nombre, codigo_local, categoria_id, planta_id, area_m2, descripcion, created_at, updated_at
+        `SELECT id, nombre, codigo_local, planta_id, area_m2, descripcion, created_at, updated_at
          FROM locales
          WHERE id = $1`,
         [id],
@@ -133,10 +131,6 @@ export class LocalesService {
       fields.push(`codigo_local = $${fields.length + 1}`);
       values.push(updateLocalDto.codigoLocal);
     }
-    if (updateLocalDto.categoriaId !== undefined) {
-      fields.push(`categoria_id = $${fields.length + 1}`);
-      values.push(updateLocalDto.categoriaId);
-    }
     if (updateLocalDto.plantaId !== undefined) {
       fields.push(`planta_id = $${fields.length + 1}`);
       values.push(updateLocalDto.plantaId);
@@ -161,7 +155,7 @@ export class LocalesService {
         `UPDATE locales
          SET ${fields.join(', ')}, updated_at = now()
          WHERE id = $${values.length}
-         RETURNING id, nombre, codigo_local, categoria_id, planta_id, area_m2, descripcion, created_at, updated_at`,
+         RETURNING id, nombre, codigo_local, planta_id, area_m2, descripcion, created_at, updated_at`,
         values,
       );
 

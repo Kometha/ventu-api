@@ -23,13 +23,6 @@ export class CreateLocatarioDto {
   razonSocial: string;
 
   @ApiProperty({
-    description: 'Categoria del locatario',
-    example: '4be31bc2-d5f3-4b17-bc57-a6200e7ea9f4',
-  })
-  @IsUUID('4', { message: 'categoriaId debe ser un UUID valido' })
-  categoriaId: string;
-
-  @ApiProperty({
     description: 'RTN unico',
     example: '08011999123960',
     maxLength: 20,

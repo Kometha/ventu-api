@@ -112,7 +112,6 @@ export class LocatariosService {
         [
           createLocatarioDto.nombreComercial,
           createLocatarioDto.razonSocial,
-          createLocatarioDto.categoriaId,
           createLocatarioDto.rtn,
           createLocatarioDto.telefono,
           createLocatarioDto.email,
@@ -183,10 +182,6 @@ export class LocatariosService {
       if (updateLocatarioDto.razonSocial !== undefined) {
         fields.push(`razon_social = $${fields.length + 1}`);
         values.push(updateLocatarioDto.razonSocial);
-      }
-      if (updateLocatarioDto.categoriaId !== undefined) {
-        fields.push(`categoria_id = $${fields.length + 1}`);
-        values.push(updateLocatarioDto.categoriaId);
       }
       if (updateLocatarioDto.rtn !== undefined) {
         fields.push(`rtn = $${fields.length + 1}`);

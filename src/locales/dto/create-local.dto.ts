@@ -31,13 +31,6 @@ export class CreateLocalDto {
   codigoLocal: string;
 
   @ApiProperty({
-    description: 'ID de la categoria asociada',
-    example: '4be31bc2-d5f3-4b17-bc57-a6200e7ea9f4',
-  })
-  @IsUUID('4', { message: 'categoriaId debe ser un UUID valido' })
-  categoriaId: string;
-
-  @ApiProperty({
     description: 'ID de la planta asociada',
     example: '42f8bd8c-aa31-4cfd-8f97-e17a3ec85f63',
   })
