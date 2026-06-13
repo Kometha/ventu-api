@@ -77,9 +77,9 @@ const CONTRATO_SELECT = `
 
 const CONTRATO_FROM = `
   FROM contratos c
-  INNER JOIN locales l ON l.id = c.local_id
-  INNER JOIN locatarios lo ON lo.id = c.locatario_id
-  INNER JOIN estados_contrato ec ON ec.id = c.estado_contrato_id`;
+  LEFT JOIN locales l ON l.id = c.local_id
+  LEFT JOIN locatarios lo ON lo.id = c.locatario_id
+  LEFT JOIN estados_contrato ec ON ec.id = c.estado_contrato_id`;
 
 @Injectable()
 export class ContratosService {
@@ -153,10 +153,12 @@ export class ContratosService {
   }
 
   async create(createContratoDto: CreateContratoDto): Promise<Contrato> {
-    this.assertFechasValidas(
-      createContratoDto.fechaInicio,
-      createContratoDto.fechaFin,
-    );
+    if (createContratoDto.fechaInicio && createContratoDto.fechaFin) {
+      this.assertFechasValidas(
+        createContratoDto.fechaInicio,
+        createContratoDto.fechaFin,
+      );
+    }
 
     try {
       const insert = await this.databaseService.query<{ id: string }>(
@@ -172,13 +174,13 @@ export class ContratosService {
          VALUES ($1, $2, $3, $4, $5, $6, $7)
          RETURNING id`,
         [
-          createContratoDto.localId,
-          createContratoDto.locatarioId,
-          createContratoDto.estadoContratoId,
-          createContratoDto.fechaInicio,
-          createContratoDto.fechaFin,
-          createContratoDto.rentaBase,
-          createContratoDto.moneda ?? 'HNL',
+          createContratoDto.localId ?? null,
+          createContratoDto.locatarioId ?? null,
+          createContratoDto.estadoContratoId ?? null,
+          createContratoDto.fechaInicio ?? null,
+          createContratoDto.fechaFin ?? null,
+          createContratoDto.rentaBase ?? null,
+          createContratoDto.moneda ?? 'L',
         ],
       );
 

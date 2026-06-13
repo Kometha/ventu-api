@@ -15,6 +15,13 @@ export type UploadedImageResult = {
   bucket: string;
 };
 
+export type UploadedPdfResult = {
+  path: string;
+  publicUrl: string;
+  filename: string;
+  bucket: string;
+};
+
 @Injectable()
 export class UploadsService {
   private readonly supabase: SupabaseClient;
@@ -99,6 +106,49 @@ export class UploadsService {
     return {
       path: filePath,
       publicUrl: data.publicUrl,
+      bucket: this.bucket,
+    };
+  }
+
+  async uploadPdf(
+    file: Express.Multer.File,
+    folder = 'contratos/archivos',
+  ): Promise<UploadedPdfResult> {
+    if (!file) {
+      throw new BadRequestException('Debes enviar un archivo en el campo "file".');
+    }
+
+    if (file.mimetype !== 'application/pdf') {
+      throw new BadRequestException('Solo se permiten archivos PDF.');
+    }
+
+    const uniqueName = `${randomUUID()}.pdf`;
+    const filePath = `${folder}/${new Date().getUTCFullYear()}/${uniqueName}`;
+
+    const { error } = await this.supabase.storage
+      .from(this.bucket)
+      .upload(filePath, file.buffer, {
+        contentType: 'application/pdf',
+        upsert: false,
+      });
+
+    if (error) {
+      if (error.message?.includes('Invalid Compact JWS')) {
+        throw new UnauthorizedException(
+          'SUPABASE_SERVICE_ROLE_KEY invalida. Usa la service_role key JWT de Supabase.',
+        );
+      }
+      throw new InternalServerErrorException(
+        `No se pudo subir el PDF a Supabase: ${error.message}`,
+      );
+    }
+
+    const { data } = this.supabase.storage.from(this.bucket).getPublicUrl(filePath);
+
+    return {
+      path: filePath,
+      publicUrl: data.publicUrl,
+      filename: file.originalname,
       bucket: this.bucket,
     };
   }

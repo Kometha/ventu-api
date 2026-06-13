@@ -18,7 +18,7 @@ import {
 } from '@nestjs/swagger';
 import { CreateLocatarioDto } from './dto/create-locatario.dto';
 import { UpdateLocatarioDto } from './dto/update-locatario.dto';
-import { Locatario } from './entities/locatario.entity';
+import { Locatario, LocatarioAuditoria } from './entities/locatario.entity';
 import { LocatariosService } from './locatarios.service';
 
 @ApiTags('locatarios')
@@ -48,6 +48,17 @@ export class LocatariosController {
   })
   findAll(): Promise<Locatario[]> {
     return this.locatariosService.findAll();
+  }
+
+  @Get('auditoria')
+  @ApiOperation({ summary: 'Obtener historial de auditoria de locatarios' })
+  @ApiResponse({
+    status: 200,
+    description: 'Historial de auditoria ordenado por fecha descendente',
+    type: [LocatarioAuditoria],
+  })
+  findAuditoria(): Promise<LocatarioAuditoria[]> {
+    return this.locatariosService.findAuditoria();
   }
 
   @Get(':id')

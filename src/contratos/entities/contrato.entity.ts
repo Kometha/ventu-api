@@ -90,7 +90,7 @@ export class Contrato {
 
   @ApiProperty({
     description: 'Moneda del contrato',
-    example: 'HNL',
+    example: 'L',
   })
   moneda: string;
 

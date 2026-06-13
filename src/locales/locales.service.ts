@@ -18,6 +18,7 @@ type LocalRow = {
   categoria_id: string;
   planta_id: string;
   area_m2: string | number;
+  ocupado: boolean | null;
   descripcion: string | null;
   created_at: Date;
   updated_at: Date;
@@ -36,6 +37,7 @@ export class LocalesService {
       codigoLocal: row.codigo_local,
       plantaId: row.planta_id,
       areaM2: Number(row.area_m2),
+      ocupado: row.ocupado,
       descripcion: row.descripcion,
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at),
@@ -67,7 +69,7 @@ export class LocalesService {
       const result = await this.databaseService.query<LocalRow>(
         `INSERT INTO locales (nombre, codigo_local, planta_id, area_m2, descripcion)
          VALUES ($1, $2, $3, $4, $5)
-         RETURNING id, nombre, codigo_local, planta_id, area_m2, descripcion, created_at, updated_at`,
+         RETURNING id, nombre, codigo_local, planta_id, area_m2, ocupado, descripcion, created_at, updated_at`,
         [
           createLocalDto.nombre,
           createLocalDto.codigoLocal,
@@ -86,7 +88,7 @@ export class LocalesService {
   async findAll(): Promise<Local[]> {
     try {
       const result = await this.databaseService.query<LocalRow>(
-        `SELECT id, nombre, codigo_local, planta_id, area_m2, descripcion, created_at, updated_at
+        `SELECT id, nombre, codigo_local, planta_id, area_m2, ocupado, descripcion, created_at, updated_at
          FROM locales
          ORDER BY created_at DESC`,
       );
@@ -100,7 +102,7 @@ export class LocalesService {
   async findOne(id: string): Promise<Local> {
     try {
       const result = await this.databaseService.query<LocalRow>(
-        `SELECT id, nombre, codigo_local, planta_id, area_m2, descripcion, created_at, updated_at
+        `SELECT id, nombre, codigo_local, planta_id, area_m2, ocupado, descripcion, created_at, updated_at
          FROM locales
          WHERE id = $1`,
         [id],
@@ -155,7 +157,7 @@ export class LocalesService {
         `UPDATE locales
          SET ${fields.join(', ')}, updated_at = now()
          WHERE id = $${values.length}
-         RETURNING id, nombre, codigo_local, planta_id, area_m2, descripcion, created_at, updated_at`,
+         RETURNING id, nombre, codigo_local, planta_id, area_m2, ocupado, descripcion, created_at, updated_at`,
         values,
       );
 

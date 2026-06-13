@@ -18,6 +18,8 @@ import { CategoriasModule } from './categorias/categorias.module';
 import { PlantasModule } from './plantas/plantas.module';
 import { EstadosContratoModule } from './estados-contrato/estados-contrato.module';
 import { ContratosModule } from './contratos/contratos.module';
+import { ArchivosContratosModule } from './archivos-contratos/archivos-contratos.module';
+import { MapaModule } from './mapa/mapa.module';
 
 /**
  * Módulo raíz de la aplicación
@@ -38,6 +40,8 @@ import { ContratosModule } from './contratos/contratos.module';
     PlantasModule, // Módulo CRUD de plantas
     EstadosContratoModule, // Módulo CRUD de estados de contrato
     ContratosModule, // Módulo CRUD de contratos de arrendamiento
+    ArchivosContratosModule, // Módulo para archivos PDF de contratos
+    MapaModule, // Módulo de vistas de ocupacion y mapa de locales
     AuthModule,
     UsuariosModule,
     TicketsModule,

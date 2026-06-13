@@ -38,6 +38,13 @@ export class Local {
   areaM2: number;
 
   @ApiProperty({
+    description: 'Indica si el local esta ocupado',
+    example: true,
+    nullable: true,
+  })
+  ocupado?: boolean | null;
+
+  @ApiProperty({
     description: 'Descripcion del local',
     example: 'Local comercial en planta baja',
     nullable: true,
