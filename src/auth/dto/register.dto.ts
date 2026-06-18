@@ -27,9 +27,9 @@ export class RegisterDto {
 
   @ApiProperty({
     required: false,
-    description: 'Local asociado si el usuario es locatario',
+    description: 'Locatario al que pertenece el usuario',
   })
   @IsOptional()
   @IsUUID('4')
-  localId?: string;
+  locatarioId?: string;
 }

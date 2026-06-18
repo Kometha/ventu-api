@@ -11,7 +11,11 @@ import { RolUsuario } from '../common/enums/rol-usuario.enum';
 import { DatabaseService } from '../database/database.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
-import { Usuario, UsuarioTecnico } from './entities/usuario.entity';
+import {
+  Usuario,
+  UsuarioLocatario,
+  UsuarioTecnico,
+} from './entities/usuario.entity';
 
 type UsuarioRow = {
   id: string;
@@ -19,11 +23,21 @@ type UsuarioRow = {
   nombre: string;
   avatar_iniciales: string;
   rol: RolUsuario;
-  local_id: string | null;
+  locatario_id: string | null;
   activo: boolean;
   ultimo_acceso: Date | null;
   created_at: Date;
   updated_at: Date;
+};
+
+type UsuarioRowConLocatario = UsuarioRow & {
+  locatario_nombre: string | null;
+  locatario_categoria_id: string | null;
+  locatario_categoria_nombre: string | null;
+  locatario_local_id: string | null;
+  locatario_local_nombre: string | null;
+  locatario_planta_id: string | null;
+  locatario_planta_nombre: string | null;
 };
 
 type UsuarioAuthRow = UsuarioRow & {
@@ -32,7 +46,7 @@ type UsuarioAuthRow = UsuarioRow & {
 };
 
 const USUARIO_SELECT = `
-  id, email, nombre, avatar_iniciales, rol, local_id, activo, ultimo_acceso, created_at, updated_at`;
+  id, email, nombre, avatar_iniciales, rol, locatario_id, activo, ultimo_acceso, created_at, updated_at`;
 
 @Injectable()
 export class UsuariosService {
@@ -48,14 +62,30 @@ export class UsuariosService {
     return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
   }
 
-  private mapRowToEntity(row: UsuarioRow): Usuario {
+  private mapRowToEntity(row: UsuarioRow | UsuarioRowConLocatario): Usuario {
+    const locatarioNombre =
+      'locatario_nombre' in row ? row.locatario_nombre : null;
+
     return new Usuario({
       id: row.id,
       email: row.email,
       nombre: row.nombre,
       avatarIniciales: row.avatar_iniciales,
       rol: row.rol,
-      localId: row.local_id,
+      locatarioId: row.locatario_id,
+      locatario:
+        row.locatario_id && locatarioNombre && 'locatario_nombre' in row
+          ? new UsuarioLocatario({
+              id: row.locatario_id,
+              nombre: locatarioNombre,
+              categoriaId: row.locatario_categoria_id,
+              categoriaNombre: row.locatario_categoria_nombre,
+              localId: row.locatario_local_id,
+              localNombre: row.locatario_local_nombre,
+              plantaId: row.locatario_planta_id,
+              plantaNombre: row.locatario_planta_nombre,
+            })
+          : null,
       activo: row.activo,
       ultimoAcceso: row.ultimo_acceso ? new Date(row.ultimo_acceso) : null,
       createdAt: new Date(row.created_at),
@@ -68,7 +98,7 @@ export class UsuariosService {
       case '23505':
         throw new ConflictException('Ya existe un usuario con ese email.');
       case '23503':
-        throw new BadRequestException('localId no existe en la base de datos.');
+        throw new BadRequestException('locatarioId no existe en la base de datos.');
       case '22P02':
         throw new BadRequestException('Uno o mas IDs no tienen formato UUID.');
       default:
@@ -98,10 +128,29 @@ export class UsuariosService {
   }
 
   async findById(id: string): Promise<Usuario | null> {
-    const result = await this.databaseService.query<UsuarioRow>(
-      `SELECT ${USUARIO_SELECT}
-       FROM usuarios
-       WHERE id = $1`,
+    const result = await this.databaseService.query<UsuarioRowConLocatario>(
+      `SELECT u.id, u.email, u.nombre, u.avatar_iniciales, u.rol, u.locatario_id,
+              u.activo, u.ultimo_acceso, u.created_at, u.updated_at,
+              l.nombre_comercial AS locatario_nombre,
+              l.categoria_id     AS locatario_categoria_id,
+              cat.nombre         AS locatario_categoria_nombre,
+              lo.id              AS locatario_local_id,
+              lo.nombre          AS locatario_local_nombre,
+              lo.planta_id       AS locatario_planta_id,
+              pl.nombre          AS locatario_planta_nombre
+       FROM usuarios u
+       LEFT JOIN locatarios l ON l.id = u.locatario_id
+       LEFT JOIN categorias cat ON cat.id = l.categoria_id
+       LEFT JOIN LATERAL (
+         SELECT c.local_id
+         FROM contratos c
+         WHERE c.locatario_id = l.id
+         ORDER BY c.fecha_inicio DESC
+         LIMIT 1
+       ) c ON true
+       LEFT JOIN locales lo ON lo.id = c.local_id
+       LEFT JOIN plantas pl ON pl.id = lo.planta_id
+       WHERE u.id = $1`,
       [id],
     );
     return result.rows[0] ? this.mapRowToEntity(result.rows[0]) : null;
@@ -136,7 +185,7 @@ export class UsuariosService {
     try {
       const result = await this.databaseService.query<UsuarioRow>(
         `INSERT INTO usuarios (
-           email, password_hash, nombre, avatar_iniciales, rol, local_id, activo
+           email, password_hash, nombre, avatar_iniciales, rol, locatario_id, activo
          )
          VALUES ($1, $2, $3, $4, $5, $6, $7)
          RETURNING ${USUARIO_SELECT}`,
@@ -146,7 +195,7 @@ export class UsuariosService {
           createUsuarioDto.nombre,
           avatarIniciales,
           createUsuarioDto.rol,
-          createUsuarioDto.localId ?? null,
+          createUsuarioDto.locatarioId ?? null,
           createUsuarioDto.activo ?? true,
         ],
       );
@@ -222,9 +271,9 @@ export class UsuariosService {
       fields.push(`rol = $${fields.length + 1}`);
       values.push(updateUsuarioDto.rol);
     }
-    if (updateUsuarioDto.localId !== undefined) {
-      fields.push(`local_id = $${fields.length + 1}`);
-      values.push(updateUsuarioDto.localId);
+    if (updateUsuarioDto.locatarioId !== undefined) {
+      fields.push(`locatario_id = $${fields.length + 1}`);
+      values.push(updateUsuarioDto.locatarioId);
     }
     if (updateUsuarioDto.activo !== undefined) {
       fields.push(`activo = $${fields.length + 1}`);

@@ -8,6 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { RolUsuario } from '../common/enums/rol-usuario.enum';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
+import { UsuarioLocatario } from '../usuarios/entities/usuario.entity';
 import { UsuariosService } from '../usuarios/usuarios.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -37,7 +38,8 @@ export class AuthService {
     nombre: string;
     avatarIniciales: string;
     rol: RolUsuario;
-    localId: string | null;
+    locatarioId: string | null;
+    locatario: UsuarioLocatario | null;
   }): AuthUserProfile {
     return new AuthUserProfile({
       id: user.id,
@@ -45,7 +47,8 @@ export class AuthService {
       nombre: user.nombre,
       avatarIniciales: user.avatarIniciales,
       rol: user.rol,
-      localId: user.localId,
+      locatarioId: user.locatarioId,
+      locatario: user.locatario,
     });
   }
 
@@ -92,17 +95,18 @@ export class AuthService {
       throw new ConflictException('Ya existe un usuario con ese email');
     }
 
-    const usuario = await this.usuariosService.create({
+    const creado = await this.usuariosService.create({
       email: registerDto.email,
       nombre: registerDto.nombre,
       password: registerDto.password,
       rol: RolUsuario.CLIENTE,
-      localId: registerDto.localId,
+      locatarioId: registerDto.locatarioId,
       activo: true,
     });
 
-    await this.usuariosService.updateUltimoAcceso(usuario.id);
+    await this.usuariosService.updateUltimoAcceso(creado.id);
 
+    const usuario = await this.usuariosService.findByIdOrFail(creado.id);
     const tokens = await this.generateTokens({
       id: usuario.id,
       email: usuario.email,

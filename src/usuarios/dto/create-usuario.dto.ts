@@ -32,10 +32,10 @@ export class CreateUsuarioDto {
   @IsEnum(RolUsuario)
   rol: RolUsuario;
 
-  @ApiProperty({ required: false, example: 'f1494139-f5ff-4b69-a237-34a0be53af44' })
+  @ApiProperty({ required: false, example: 'ff8482e8-1cc7-4e92-a073-bf2080142752' })
   @IsOptional()
   @IsUUID('4')
-  localId?: string;
+  locatarioId?: string;
 
   @ApiProperty({ required: false, default: true })
   @IsOptional()

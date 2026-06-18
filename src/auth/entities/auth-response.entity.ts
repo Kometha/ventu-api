@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { RolUsuario } from '../../common/enums/rol-usuario.enum';
+import { UsuarioLocatario } from '../../usuarios/entities/usuario.entity';
 
 export class AuthTokens {
   @ApiProperty()
@@ -33,7 +34,10 @@ export class AuthUserProfile {
   rol: RolUsuario;
 
   @ApiProperty({ nullable: true })
-  localId: string | null;
+  locatarioId: string | null;
+
+  @ApiProperty({ type: UsuarioLocatario, nullable: true })
+  locatario: UsuarioLocatario | null;
 
   constructor(partial: Partial<AuthUserProfile>) {
     Object.assign(this, partial);

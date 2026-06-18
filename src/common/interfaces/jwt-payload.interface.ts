@@ -11,7 +11,7 @@ export interface AuthenticatedUser {
   email: string;
   nombre: string;
   rol: RolUsuario;
-  localId: string | null;
+  locatarioId: string | null;
   avatarIniciales: string;
   activo: boolean;
 }
