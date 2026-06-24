@@ -54,6 +54,9 @@ async function bootstrap() {
       'contratos',
       'CRUD de contratos de arrendamiento con relaciones embebidas',
     )
+    .addTag('departamentos', 'RRHH: CRUD de departamentos')
+    .addTag('puestos', 'RRHH: CRUD de puestos/cargos')
+    .addTag('empleados', 'RRHH: mantenimiento de empleados, documentos y auditoria')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
