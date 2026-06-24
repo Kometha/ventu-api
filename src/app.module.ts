@@ -20,6 +20,9 @@ import { EstadosContratoModule } from './estados-contrato/estados-contrato.modul
 import { ContratosModule } from './contratos/contratos.module';
 import { ArchivosContratosModule } from './archivos-contratos/archivos-contratos.module';
 import { MapaModule } from './mapa/mapa.module';
+import { DepartamentosModule } from './departamentos/departamentos.module';
+import { PuestosModule } from './puestos/puestos.module';
+import { EmpleadosModule } from './empleados/empleados.module';
 
 /**
  * Módulo raíz de la aplicación
@@ -42,6 +45,9 @@ import { MapaModule } from './mapa/mapa.module';
     ContratosModule, // Módulo CRUD de contratos de arrendamiento
     ArchivosContratosModule, // Módulo para archivos PDF de contratos
     MapaModule, // Módulo de vistas de ocupacion y mapa de locales
+    DepartamentosModule, // RRHH: catálogo de departamentos
+    PuestosModule, // RRHH: catálogo de puestos/cargos
+    EmpleadosModule, // RRHH: mantenimiento de empleados
     AuthModule,
     UsuariosModule,
     TicketsModule,
