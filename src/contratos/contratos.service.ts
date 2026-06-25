@@ -6,6 +6,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { normalizeMoneda } from '../common/utils/moneda.util';
 import { DatabaseService } from '../database/database.service';
 import { CreateContratoDto } from './dto/create-contrato.dto';
 import { UpdateContratoDto } from './dto/update-contrato.dto';
@@ -180,7 +181,7 @@ export class ContratosService {
           createContratoDto.fechaInicio ?? null,
           createContratoDto.fechaFin ?? null,
           createContratoDto.rentaBase ?? null,
-          createContratoDto.moneda ?? 'L',
+          normalizeMoneda(createContratoDto.moneda),
         ],
       );
 
@@ -297,7 +298,7 @@ export class ContratosService {
     }
     if (updateContratoDto.moneda !== undefined) {
       fields.push(`moneda = $${fields.length + 1}`);
-      values.push(updateContratoDto.moneda);
+      values.push(normalizeMoneda(updateContratoDto.moneda));
     }
 
     if (!fields.length) {

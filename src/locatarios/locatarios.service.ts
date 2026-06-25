@@ -7,6 +7,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PoolClient } from 'pg';
+import { normalizeMoneda } from '../common/utils/moneda.util';
 import { DatabaseService } from '../database/database.service';
 import { CreateLocatarioDto } from './dto/create-locatario.dto';
 import { UpdateLocatarioDto } from './dto/update-locatario.dto';
@@ -229,7 +230,7 @@ export class LocatariosService {
             c.fechaInicio,
             c.fechaFin,
             c.rentaBase,
-            c.moneda ?? 'L',
+            normalizeMoneda(c.moneda),
           ],
         );
       }
@@ -363,7 +364,7 @@ export class LocatariosService {
             c.fechaInicio,
             c.fechaFin,
             c.rentaBase,
-            c.moneda ?? 'L',
+            normalizeMoneda(c.moneda),
           ],
         );
       }
