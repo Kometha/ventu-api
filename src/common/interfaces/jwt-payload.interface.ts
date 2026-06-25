@@ -12,6 +12,8 @@ export interface AuthenticatedUser {
   nombre: string;
   rol: RolUsuario;
   locatarioId: string | null;
+  empleadoId: string | null;
   avatarIniciales: string;
+  fotoUrl: string | null;
   activo: boolean;
 }

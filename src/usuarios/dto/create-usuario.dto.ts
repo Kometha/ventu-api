@@ -13,15 +13,27 @@ import {
 import { RolUsuario } from '../../common/enums/rol-usuario.enum';
 
 export class CreateUsuarioDto {
-  @ApiProperty({ example: 'cliente@empresa.com' })
+  @ApiProperty({
+    required: false,
+    example: 'cliente@empresa.com',
+    description:
+      'Requerido si no se envia empleadoId. Si se envia empleadoId y se omite, se hereda el email del empleado.',
+  })
+  @IsOptional()
   @IsEmail({}, { message: 'email debe ser valido' })
-  email: string;
+  email?: string;
 
-  @ApiProperty({ example: 'Maria Lopez' })
+  @ApiProperty({
+    required: false,
+    example: 'Maria Lopez',
+    description:
+      'Requerido si no se envia empleadoId (el staff hereda el nombre del empleado).',
+  })
+  @IsOptional()
   @IsString()
   @IsNotEmpty()
   @MaxLength(120)
-  nombre: string;
+  nombre?: string;
 
   @ApiProperty({ example: 'Password123!', minLength: 8 })
   @IsString()
@@ -32,7 +44,19 @@ export class CreateUsuarioDto {
   @IsEnum(RolUsuario)
   rol: RolUsuario;
 
-  @ApiProperty({ required: false, example: 'ff8482e8-1cc7-4e92-a073-bf2080142752' })
+  @ApiProperty({
+    required: false,
+    description: 'Empleado al que se vincula la cuenta (staff interno)',
+    example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+  })
+  @IsOptional()
+  @IsUUID('4')
+  empleadoId?: string;
+
+  @ApiProperty({
+    required: false,
+    example: 'ff8482e8-1cc7-4e92-a073-bf2080142752',
+  })
   @IsOptional()
   @IsUUID('4')
   locatarioId?: string;

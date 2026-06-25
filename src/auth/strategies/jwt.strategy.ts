@@ -31,7 +31,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       nombre: usuario.nombre,
       rol: usuario.rol,
       locatarioId: usuario.locatarioId,
+      empleadoId: usuario.empleadoId,
       avatarIniciales: usuario.avatarIniciales,
+      fotoUrl: usuario.fotoUrl,
       activo: usuario.activo,
     };
   }

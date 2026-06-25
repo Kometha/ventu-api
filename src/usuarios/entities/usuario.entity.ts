@@ -8,7 +8,10 @@ export class UsuarioLocatario {
   @ApiProperty({ example: 'Cafe Central' })
   nombre: string;
 
-  @ApiProperty({ example: '4be31bc2-d5f3-4b17-bc57-a6200e7ea9f4', nullable: true })
+  @ApiProperty({
+    example: '4be31bc2-d5f3-4b17-bc57-a6200e7ea9f4',
+    nullable: true,
+  })
   categoriaId: string | null;
 
   @ApiProperty({ example: 'Restaurantes', nullable: true })
@@ -39,6 +42,30 @@ export class UsuarioLocatario {
   }
 }
 
+export class UsuarioEmpleado {
+  @ApiProperty({ example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' })
+  id: string;
+
+  @ApiProperty({ example: 'EMP-0001' })
+  codigoEmpleado: string;
+
+  @ApiProperty({ example: 'p1p2p3p4-...', nullable: true })
+  puestoId: string | null;
+
+  @ApiProperty({ example: 'Gerente de RRHH', nullable: true })
+  puestoNombre: string | null;
+
+  @ApiProperty({ example: 'd1d2d3d4-...', nullable: true })
+  departamentoId: string | null;
+
+  @ApiProperty({ example: 'Recursos Humanos', nullable: true })
+  departamentoNombre: string | null;
+
+  constructor(partial: Partial<UsuarioEmpleado>) {
+    Object.assign(this, partial);
+  }
+}
+
 export class Usuario {
   @ApiProperty({ example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' })
   id: string;
@@ -52,14 +79,36 @@ export class Usuario {
   @ApiProperty({ example: 'ML' })
   avatarIniciales: string;
 
+  @ApiProperty({
+    description: 'URL de la foto de perfil (empleado.foto_url o avatar_url)',
+    nullable: true,
+    example: 'https://cdn.miapp.com/empleados/foto-001.jpg',
+  })
+  fotoUrl: string | null;
+
+  @ApiProperty({ nullable: true, example: '+504 9999-8888' })
+  telefono: string | null;
+
   @ApiProperty({ enum: RolUsuario, example: RolUsuario.CLIENTE })
   rol: RolUsuario;
 
-  @ApiProperty({ nullable: true, example: 'ff8482e8-1cc7-4e92-a073-bf2080142752' })
+  @ApiProperty({
+    nullable: true,
+    example: 'ff8482e8-1cc7-4e92-a073-bf2080142752',
+  })
   locatarioId: string | null;
 
   @ApiProperty({ type: UsuarioLocatario, nullable: true })
   locatario: UsuarioLocatario | null;
+
+  @ApiProperty({
+    nullable: true,
+    example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+  })
+  empleadoId: string | null;
+
+  @ApiProperty({ type: UsuarioEmpleado, nullable: true })
+  empleado: UsuarioEmpleado | null;
 
   @ApiProperty({ example: true })
   activo: boolean;

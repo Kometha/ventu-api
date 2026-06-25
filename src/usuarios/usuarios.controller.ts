@@ -17,11 +17,15 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { RolUsuario } from '../common/enums/rol-usuario.enum';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
+import type { AuthenticatedUser } from '../common/interfaces/jwt-payload.interface';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
+import { UpdateAvatarDto } from './dto/update-avatar.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { Usuario, UsuarioTecnico } from './entities/usuario.entity';
 import { UsuariosService } from './usuarios.service';
@@ -56,6 +60,42 @@ export class UsuariosController {
   @ApiResponse({ status: 200, type: [UsuarioTecnico] })
   findTecnicos(): Promise<UsuarioTecnico[]> {
     return this.usuariosService.findTecnicosDisponibles();
+  }
+
+  // ----------------- Perfil propio (cualquier usuario autenticado) -----------------
+
+  @Get('me')
+  @ApiOperation({ summary: 'Obtener el perfil del usuario autenticado' })
+  @ApiResponse({ status: 200, type: Usuario })
+  getMe(@CurrentUser() user: AuthenticatedUser): Promise<Usuario> {
+    return this.usuariosService.findByIdOrFail(user.id);
+  }
+
+  @Patch('me/password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Cambiar la contraseña del usuario autenticado' })
+  @ApiResponse({ status: 204, description: 'Contraseña actualizada' })
+  changeMyPassword(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: ChangePasswordDto,
+  ): Promise<void> {
+    return this.usuariosService.changePassword(
+      user.id,
+      dto.currentPassword,
+      dto.newPassword,
+    );
+  }
+
+  @Patch('me/avatar')
+  @ApiOperation({
+    summary: 'Cambiar la foto de perfil del usuario autenticado',
+  })
+  @ApiResponse({ status: 200, type: Usuario })
+  updateMyAvatar(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: UpdateAvatarDto,
+  ): Promise<Usuario> {
+    return this.usuariosService.updateAvatar(user.id, dto.fotoUrl);
   }
 
   @Get(':id')

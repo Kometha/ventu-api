@@ -8,11 +8,15 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { RolUsuario } from '../common/enums/rol-usuario.enum';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
-import { UsuarioLocatario } from '../usuarios/entities/usuario.entity';
+import { Usuario } from '../usuarios/entities/usuario.entity';
 import { UsuariosService } from '../usuarios/usuarios.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
-import { AuthResponse, AuthTokens, AuthUserProfile } from './entities/auth-response.entity';
+import {
+  AuthResponse,
+  AuthTokens,
+  AuthUserProfile,
+} from './entities/auth-response.entity';
 
 @Injectable()
 export class AuthService {
@@ -32,23 +36,19 @@ export class AuthService {
     return this.configService.get<string>('JWT_REFRESH_EXPIRES_IN', '7d');
   }
 
-  private buildUserProfile(user: {
-    id: string;
-    email: string;
-    nombre: string;
-    avatarIniciales: string;
-    rol: RolUsuario;
-    locatarioId: string | null;
-    locatario: UsuarioLocatario | null;
-  }): AuthUserProfile {
+  private buildUserProfile(user: Usuario): AuthUserProfile {
     return new AuthUserProfile({
       id: user.id,
       email: user.email,
       nombre: user.nombre,
       avatarIniciales: user.avatarIniciales,
+      fotoUrl: user.fotoUrl,
+      telefono: user.telefono,
       rol: user.rol,
       locatarioId: user.locatarioId,
       locatario: user.locatario,
+      empleadoId: user.empleadoId,
+      empleado: user.empleado,
     });
   }
 
