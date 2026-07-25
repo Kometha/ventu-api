@@ -60,6 +60,7 @@ type DocumentoRow = {
   fecha_emision: string | null;
   fecha_vencimiento: string | null;
   created_at: Date;
+  test: string;
 };
 
 export interface FindEmpleadosFiltros {
