@@ -23,6 +23,7 @@ import { MapaModule } from './mapa/mapa.module';
 import { DepartamentosModule } from './departamentos/departamentos.module';
 import { PuestosModule } from './puestos/puestos.module';
 import { EmpleadosModule } from './empleados/empleados.module';
+import { BanksModule } from './banks/banks.module';
 
 /**
  * Módulo raíz de la aplicación
@@ -48,6 +49,7 @@ import { EmpleadosModule } from './empleados/empleados.module';
     DepartamentosModule, // RRHH: catálogo de departamentos
     PuestosModule, // RRHH: catálogo de puestos/cargos
     EmpleadosModule, // RRHH: mantenimiento de empleados
+    BanksModule, // Catálogo de bancos
     AuthModule,
     UsuariosModule,
     TicketsModule,
