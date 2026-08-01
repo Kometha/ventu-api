@@ -50,6 +50,21 @@ export class LocalesController {
     return this.localesService.findAll();
   }
 
+  @Get('disponibles')
+  @ApiOperation({
+    summary: 'Obtener locales disponibles (sin contrato relacionado)',
+    description:
+      'Devuelve unicamente los locales que no tienen ningun contrato asociado. Ideal para poblar dropdowns donde el local aun puede ser asignado.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Listado de locales disponibles',
+    type: [Local],
+  })
+  findDisponibles(): Promise<Local[]> {
+    return this.localesService.findDisponibles();
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Obtener un local por ID' })
   @ApiParam({

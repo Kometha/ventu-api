@@ -99,6 +99,25 @@ export class LocalesService {
     }
   }
 
+  async findDisponibles(): Promise<Local[]> {
+    try {
+      // Locales que no tienen ningun contrato relacionado (local_id).
+      const result = await this.databaseService.query<LocalRow>(
+        `SELECT l.id, l.nombre, l.codigo_local, l.planta_id, l.area_m2,
+                l.ocupado, l.descripcion, l.created_at, l.updated_at
+         FROM locales l
+         WHERE NOT EXISTS (
+           SELECT 1 FROM contratos c WHERE c.local_id = l.id
+         )
+         ORDER BY l.created_at DESC`,
+      );
+
+      return result.rows.map((row) => this.mapRowToEntity(row));
+    } catch (error) {
+      this.handleDbError(error);
+    }
+  }
+
   async findOne(id: string): Promise<Local> {
     try {
       const result = await this.databaseService.query<LocalRow>(
